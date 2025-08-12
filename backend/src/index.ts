@@ -16,7 +16,39 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env["FRONTEND_URL"] || "http://localhost:5173",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      const allowedOrigins = ["http://localhost:5173", "http://localhost:3000"];
+
+      // Add Railway domains if available
+      if (process.env["RAILWAY_PUBLIC_DOMAIN"]) {
+        allowedOrigins.push(`https://${process.env["RAILWAY_PUBLIC_DOMAIN"]}`);
+      }
+
+      if (process.env["RAILWAY_PRIVATE_DOMAIN"]) {
+        allowedOrigins.push(`https://${process.env["RAILWAY_PRIVATE_DOMAIN"]}`);
+      }
+
+      // Add custom frontend URL if set
+      if (process.env["FRONTEND_URL"]) {
+        allowedOrigins.push(process.env["FRONTEND_URL"]);
+        // Also add without trailing slash
+        if (process.env["FRONTEND_URL"].endsWith("/")) {
+          allowedOrigins.push(process.env["FRONTEND_URL"].slice(0, -1));
+        } else {
+          allowedOrigins.push(process.env["FRONTEND_URL"] + "/");
+        }
+      }
+
+      // Check if origin is allowed
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
