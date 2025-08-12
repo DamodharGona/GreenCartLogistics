@@ -64,7 +64,11 @@ const createSwaggerOptions = (req?: Request) => ({
 });
 
 const swaggerSetup = (app: Express) => {
-  app.use("/api-docs", (req, res, next) => {
+  // Serve Swagger UI static files first
+  app.use("/api-docs", swaggerUi.serve);
+
+  // Then set up the Swagger UI with dynamic options
+  app.get("/api-docs", (req, res, next) => {
     const options = createSwaggerOptions(req);
     const specs = swaggerJsdoc(options);
 
@@ -74,8 +78,6 @@ const swaggerSetup = (app: Express) => {
       customfavIcon: "/favicon.ico",
     })(req, res, next);
   });
-
-  app.use("/api-docs", swaggerUi.serve);
 };
 
 export default swaggerSetup;
