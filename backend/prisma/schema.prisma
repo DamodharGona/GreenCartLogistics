@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id           Int      @id @default(autoincrement())
+    username     String   @unique
+    email        String   @unique
+    passwordHash String
+    role         Role     @default(MANAGER)
+    isActive     Boolean  @default(true)
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    // Relations
+    simulations Simulation[]
+
+    @@map("users")
+}
+
+model Driver {
+    id            Int      @id @default(autoincrement())
+    name          String
+    shiftHours    Int
+    pastWeekHours Int[] // Array of 7 days
+    isActive      Boolean  @default(true)
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    @@map("drivers")
+}
+
+model Route {
+    id           Int          @id @default(autoincrement())
+    distanceKm   Decimal      @db.Decimal(8, 2)
+    trafficLevel TrafficLevel
+    baseTimeMin  Int
+    isActive     Boolean      @default(true)
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime     @updatedAt
+
+    // Relations
+    orders Order[]
+
+    @@map("routes")
+}
+
+model Order {
+    id           Int      @id @default(autoincrement())
+    orderId      String   @unique @map("order_id")
+    valueRs      Decimal  @map("value_rs") @db.Decimal(10, 2)
+    routeId      Int      @map("route_id")
+    deliveryTime String   @map("delivery_time") // Time as string "HH:MM"
+    isActive     Boolean  @default(true)
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    // Relations
+    route Route @relation(fields: [routeId], references: [id])
+
+    @@map("orders")
+}
+
+model Simulation {
+    id               Int      @id @default(autoincrement())
+    simulationName   String?  @map("simulation_name")
+    driverCount      Int      @map("driver_count")
+    routeStartTime   String   @map("route_start_time") // Time as string "HH:MM"
+    maxHours         Int      @map("max_hours")
+    totalProfit      Decimal  @map("total_profit") @db.Decimal(12, 2)
+    efficiencyScore  Decimal  @map("efficiency_score") @db.Decimal(5, 2)
+    onTimeDeliveries Int      @map("on_time_deliveries")
+    totalDeliveries  Int      @map("total_deliveries")
+    fuelCost         Decimal  @map("fuel_cost") @db.Decimal(10, 2)
+    penalties        Decimal  @db.Decimal(10, 2)
+    bonuses          Decimal  @db.Decimal(10, 2)
+    simulationData   Json     @map("simulation_data")
+    createdBy        Int?     @map("created_by")
+    createdAt        DateTime @default(now())
+
+    // Relations
+    user User? @relation(fields: [createdBy], references: [id])
+
+    @@map("simulations")
+}
+
+enum Role {
+    ADMIN
+    MANAGER
+}
+
+enum TrafficLevel {
+    LOW
+    MEDIUM
+    HIGH
+}
