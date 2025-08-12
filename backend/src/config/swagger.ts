@@ -4,12 +4,12 @@ import swaggerUi from "swagger-ui-express";
 
 const getServerUrl = (req?: Request): string => {
   // Use Railway's built-in environment variables
-  if (process.env["RAILWAY_PRIVATE_DOMAIN"]) {
-    return `https://${process.env["RAILWAY_PRIVATE_DOMAIN"]}`;
-  }
-
   if (process.env["RAILWAY_PUBLIC_DOMAIN"]) {
     return `https://${process.env["RAILWAY_PUBLIC_DOMAIN"]}`;
+  }
+
+  if (process.env["RAILWAY_PRIVATE_DOMAIN"]) {
+    return `https://${process.env["RAILWAY_PRIVATE_DOMAIN"]}`;
   }
 
   // Auto-detect from request headers (fallback)
